@@ -1,0 +1,44 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SmartBus</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <h2>SmartBus</h2>
+            <div>
+                <a href="/">Dashboard</a>
+                <a href="/update-location/">Update Location</a>
+                <a href="/update-passenger/">Update Passenger</a>
+                <a href="/driver-tracking/">Driver Tracking</a>
+                <a href="/admin/">Admin</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>College Bus Tracking System</p>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    {% block scripts %}
+    {% endblock %}
+
+</body>
+</html>

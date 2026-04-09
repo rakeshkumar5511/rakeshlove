@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="card">
+    <h2>Select Bus</h2>
+
+    <form method="GET">
+        <select name="bus">
+            <option value="">-- Select Bus --</option>
+            {% for bus in buses %}
+                <option value="{{ bus.id }}" {% if selected_bus and selected_bus.id == bus.id %}selected{% endif %}>
+                    {{ bus.bus_number }}
+                </option>
+            {% endfor %}
+        </select>
+        <button type="submit">View</button>
+    </form>
+</div>
+
+{% if selected_bus %}
+
+<div class="card">
+    <h2>Bus Details</h2>
+    <p><strong>Bus:</strong> {{ selected_bus.bus_number }}</p>
+    <p><strong>Driver:</strong> {{ selected_bus.driver_name }}</p>
+    <p><strong>Route:</strong>
+        {% if selected_bus.assigned_route %}
+            {{ selected_bus.assigned_route.start_location }} → {{ selected_bus.assigned_route.end_location }}
+        {% else %}
+            No route assigned
+        {% endif %}
+    </p>
+</div>
+
+<div class="card">
+    <h3>Latest Location</h3>
+
+    {% if latest_location %}
+        <p>Latitude: {{ latest_location.latitude }}</p>
+        <p>Longitude: {{ latest_location.longitude }}</p>
+        <p>Speed: {{ latest_location.speed }}</p>
+    {% else %}
+        <p>No data</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3>Passenger Count</h3>
+
+    {% if latest_passenger %}
+        <p>Current: {{ latest_passenger.current_count }}</p>
+        <p>In: {{ latest_passenger.in_count }}</p>
+        <p>Out: {{ latest_passenger.out_count }}</p>
+    {% else %}
+        <p>No data</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3>Map</h3>
+
+    {% if latest_location %}
+        <div 
+            id="map" 
+            style="height:400px; width:100%;"
+            data-lat="{{ latest_location.latitude }}"
+            data-lng="{{ latest_location.longitude }}">
+        </div>
+    {% else %}
+        <p>No location available for map.</p>
+    {% endif %}
+</div>
+
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+
+{% if latest_location %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var mapDiv = document.getElementById("map");
+
+        if (mapDiv) {
+            var lat = parseFloat(mapDiv.dataset.lat);
+            var lng = parseFloat(mapDiv.dataset.lng);
+
+            var map = L.map('map').setView([lat, lng], 15);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: 'Map data © OpenStreetMap contributors'
+            }).addTo(map);
+
+            L.marker([lat, lng]).addTo(map)
+                .bindPopup("Bus Location")
+                .openPopup();
+        }
+    });
+</script>
+{% endif %}
+
+{% endblock %}

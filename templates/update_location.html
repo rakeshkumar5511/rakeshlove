@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="card">
+    <h2>Update Bus Location</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Save Location</button>
+    </form>
+</div>
+
+{% endblock %}

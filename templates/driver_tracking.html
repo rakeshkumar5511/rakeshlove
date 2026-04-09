@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="card">
+    <h2>Driver Live Tracking</h2>
+    <p>Driver apne phone se bus ki live location bhej sakta hai.</p>
+
+    <label>Select Bus:</label>
+    <select id="bus">
+        <option value="">-- Select Bus --</option>
+        {% for bus in buses %}
+            <option value="{{ bus.id }}">{{ bus.bus_number }}</option>
+        {% endfor %}
+    </select>
+
+    <br><br>
+
+    <button onclick="startTracking()">Start Live Tracking</button>
+    <button onclick="stopTracking()">Stop Tracking</button>
+
+    <p id="status" style="margin-top:15px; font-weight:bold;"></p>
+    <p><strong>Latitude:</strong> <span id="lat">--</span></p>
+    <p><strong>Longitude:</strong> <span id="lng">--</span></p>
+    <p><strong>Speed:</strong> <span id="speed">--</span></p>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+let trackingInterval = null;
+
+function getCSRFToken() {
+    let cookieValue = null;
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+        cookie = cookie.trim();
+        if (cookie.startsWith('csrftoken=')) {
+            cookieValue = cookie.substring('csrftoken='.length, cookie.length);
+            break;
+        }
+    }
+    return cookieValue;
+}
+
+function sendLocation() {
+    const busId = document.getElementById("bus").value;
+
+    if (!busId) {
+        document.getElementById("status").innerText = "Please select a bus first.";
+        return;
+    }
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            let lat = position.coords.latitude;
+            let lng = position.coords.longitude;
+            let speed = position.coords.speed ? (position.coords.speed * 3.6).toFixed(2) : 0;
+
+            document.getElementById("lat").innerText = lat;
+            document.getElementById("lng").innerText = lng;
+            document.getElementById("speed").innerText = speed;
+            document.getElementById("status").innerText = "Live tracking running...";
+
+            fetch("/auto-save-location/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "X-CSRFToken": getCSRFToken()
+                },
+                body: `bus=${busId}&latitude=${lat}&longitude=${lng}&speed=${speed}`
+            })
+            .then(response => response.text())
+            .then(data => {
+                console.log("Saved:", data);
+            });
+
+        }, function(error) {
+            document.getElementById("status").innerText = "GPS access failed.";
+        });
+    } else {
+        document.getElementById("status").innerText = "Geolocation not supported.";
+    }
+}
+
+function startTracking() {
+    if (trackingInterval) {
+        clearInterval(trackingInterval);
+    }
+
+    sendLocation(); // first time immediately
+    trackingInterval = setInterval(sendLocation, 5000); // every 5 sec
+    document.getElementById("status").innerText = "Tracking started...";
+}
+
+function stopTracking() {
+    if (trackingInterval) {
+        clearInterval(trackingInterval);
+        trackingInterval = null;
+    }
+    document.getElementById("status").innerText = "Tracking stopped.";
+}
+</script>
+
+{% endblock %}
